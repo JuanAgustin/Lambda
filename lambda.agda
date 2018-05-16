@@ -13,9 +13,14 @@ data Expr : Set where
  App   : Expr -> Expr -> Expr
  Lamb  : String -> Expr -> Expr
 
-_+++_ : ∀ {A} -> List A -> List A -> List A
+
+
+_+++_ : List String -> List String -> List String
 []        +++ ys = ys
-(x :: xs) +++ ys = x :: (xs +++ ys)
+ys        +++ [] = ys
+(x :: xs) +++ (y :: ys) with x == y
+... | true = x :: (xs +++ ys)
+... | false = x :: ( y :: ( xs +++ ys))
 
 _-_ : List String -> String -> List String
 []        - s = []
