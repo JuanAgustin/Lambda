@@ -9,6 +9,12 @@ data List (A : Set) : Set where
  []    : List A
  _::_  : A -> List A -> List A
 
+_∈_ : V -> List V -> Bool
+x ∈ [] = false
+x ∈ (y :: ys) with x == y
+... | true = true
+... | false = x ∈ ys
+
 
 data Expr : Set where
  Var   : V -> Expr
