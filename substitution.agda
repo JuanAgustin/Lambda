@@ -5,7 +5,8 @@ module substitution  where
 open import lambda
 open import Data.String
 open import Data.Product
-open import Data.Bool
+open import Data.Bool renaming (_≟_ to _≟b_)
+open import Relation.Binary.Core
 
 
 module Subst (fresh : V -> List V -> V) where
@@ -43,7 +44,7 @@ module Reduction where
   open import Subst
 -}
 
-{-
+
 
     data _∼_ : Expr -> Expr -> Set where
       var : {x : V} ->
@@ -51,11 +52,29 @@ module Reduction where
       app : {e e' g g' : Expr} -> e ∼ e' -> g ∼ g' ->
           (App e g) ∼ (App e' g')
       lam : {e e' : Expr} {x x' y : V}  ->
-          y ∈ (x :: FreeV e) ≟ false -> y ∈ (x' :: FreeV e') ≟ false ->
-          e / (idd + (x, Var y)) ∼ e' / (idd + (x', Var y)) ->
-          (Lamb x e) ∼ (Lamb x' e')
--}
+           y ∈ (x :: FreeV e) ≡ false -> y ∈ (x' :: FreeV e') ≡ false ->
+           (e / (idd + (x , Var y))) ∼ (e' / (idd + (x' , Var y))) ->
+           (Lamb x e) ∼ (Lamb x' e')
+
     data _⟶_ : Expr -> Expr -> Set where
       β-reduction : {e e' : Expr} {x : V} ->
-                  App (Lamb x e) e ⟶ (e / (idd + (x , e')))
-  
+                   App (Lamb x e) e ⟶ (e / (idd + (x , e')))
+      Renaming : {e₀ e₁ e₁' : Expr} ->
+                 e₀ ⟶ e₁ ->
+                 e₁ ∼ e₁' ->
+                 e₀ ⟶ e₁'
+      {- Contextual Closure? -}
+
+
+    data _⟶*_ : Expr -> Expr -> Set where
+      Reflex  : {e₀ e₁ : Expr} ->
+               e₀ ∼ e₁ ->
+               e₀ ⟶* e₁
+      Transit : {e₀ e₁ e₂ : Expr} ->
+                e₀ ⟶* e₁ ->
+                e₁ ⟶* e₂ ->
+                e₀ ⟶* e₂
+      CBase   : {e₀ e₁ : Expr} ->
+                e₀ ⟶ e₁ ->
+                e₀ ⟶* e₁
+      
