@@ -7,7 +7,7 @@ open import Data.String
 open import Data.Product
 open import Data.Bool renaming (_≟_ to _≟b_)
 open import Relation.Binary.Core
-
+open import Data.Empty
 
 module Subst (fresh : V -> List V -> V) where
 
@@ -30,13 +30,13 @@ module Subst (fresh : V -> List V -> V) where
     
     FreeVSubs : Δ -> List V -> List V
     FreeVSubs δ [] = []
-    FreeVSubs δ (x :: xs) = FreeV (δ x) +++ FreeVSubs δ xs
+    FreeVSubs δ (x :: xs) = FreeVList (δ x) +++ FreeVSubs δ xs
     
     _/_ : Expr -> Δ -> Expr
     Var v / δ = δ v
     (App e e') / δ = App (e / δ) (e' / δ)
     (Lamb x e) / δ = Lamb y (e / (δ + (x , Var y)))
-      where y = fresh x (FreeVSubs δ (FreeV e - x))
+      where y = fresh x (FreeVSubs δ (FreeVList e - x))
 
 {-
 module Reduction where
@@ -51,10 +51,19 @@ module Reduction where
           (Var x) ∼ (Var x)
       app : {e e' g g' : Expr} -> e ∼ e' -> g ∼ g' ->
           (App e g) ∼ (App e' g')
+      lam : {e e' : Expr} {x x' y : V} ->
+            (y FreeV (Lamb x e) -> ⊥) -> (y FreeV (Lamb x' e') -> ⊥) ->
+            (e / (idd + (x , Var y))) ∼ (e' / (idd + (x' , Var y))) ->
+            (Lamb x e) ∼ (Lamb x' e')
+
+{-
       lam : {e e' : Expr} {x x' y : V}  ->
            y ∈ (x :: FreeV e) ≡ false -> y ∈ (x' :: FreeV e') ≡ false ->
            (e / (idd + (x , Var y))) ∼ (e' / (idd + (x' , Var y))) ->
            (Lamb x e) ∼ (Lamb x' e')
+-}
+
+{-⊥   bot ℙt -}
 
     data _⟶_ : Expr -> Expr -> Set where
       β-reduction : {e e' : Expr} {x : V} ->
@@ -63,7 +72,13 @@ module Reduction where
                  e₀ ⟶ e₁ ->
                  e₁ ∼ e₁' ->
                  e₀ ⟶ e₁'
-      {- Contextual Closure? -}
+      Ctx_AppL : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+                 App e₀ e ⟶ App e₁ e
+      Ctx_AppR : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+                 App e e₀ ⟶ App e e₁
+      Ctx_Lamb : {e₀ e₁ : Expr} {x : V} -> e₀ ⟶ e₁ ->
+                 Lamb x e₀ ⟶ Lamb x e₁
+      
 
 
     data _⟶*_ : Expr -> Expr -> Set where

@@ -2,6 +2,8 @@ module lambda where
 
 open import Data.String
 open import Data.Bool
+open import Relation.Binary.Core
+open import Data.Empty
 
 V = String
 
@@ -36,7 +38,20 @@ _-_ : List V -> V -> List V
 ... | true = xs - s
 ... | false = x :: (xs - s)
 
-FreeV : Expr -> List V
-FreeV (Var s) = s :: []
-FreeV (App e1 e2) = FreeV e1 +++ FreeV e2 
-FreeV (Lamb s e1) = FreeV e1 - s
+
+FreeVList : Expr -> List V
+FreeVList (Var s) = s :: []
+FreeVList (App e1 e2) = FreeVList e1 +++ FreeVList e2 
+FreeVList (Lamb s e1) = FreeVList e1 - s
+
+
+data _FreeV_ : V -> Expr -> Set where
+  var : {x y : V} -> x ≡ y ->
+         x FreeV (Var x)
+  appl : {x : V} {e e' : Expr} -> x FreeV e ->
+         x FreeV (App e e')
+  appr : {x : V} {e e' : Expr} -> x FreeV e' ->
+         x FreeV (App e e')
+  abs  : {x y : V} {e : Expr} -> x FreeV e -> (x ≡ y -> ⊥) ->
+         x FreeV (Lamb y e)
+
