@@ -5,7 +5,7 @@ module substitution  where
 open import lambda
 open import Data.String
 open import Data.Product
-open import Data.Bool renaming (_≟_ to _≟b_)
+open import Data.Bool
 open import Relation.Binary.Core
 open import Data.Empty
 
@@ -67,19 +67,18 @@ module Reduction where
 
     data _⟶_ : Expr -> Expr -> Set where
       β-reduction : {e e' : Expr} {x : V} ->
-                   App (Lamb x e) e ⟶ (e / (idd + (x , e')))
-      Renaming : {e₀ e₁ e₁' : Expr} ->
-                 e₀ ⟶ e₁ ->
-                 e₁ ∼ e₁' ->
-                 e₀ ⟶ e₁'
-      Ctx_AppL : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
-                 App e₀ e ⟶ App e₁ e
-      Ctx_AppR : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
-                 App e e₀ ⟶ App e e₁
-      Ctx_Lamb : {e₀ e₁ : Expr} {x : V} -> e₀ ⟶ e₁ ->
-                 Lamb x e₀ ⟶ Lamb x e₁
+                   App (Lamb x e) e' ⟶ (e / (idd + (x , e')))
+      Renaming    : {e₀ e₁ e₁' : Expr} ->
+                    e₀ ⟶ e₁ ->
+                    e₁ ∼ e₁' ->
+                    e₀ ⟶ e₁'
+      Ctx_AppL    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+                   App e₀ e ⟶ App e₁ e
+      Ctx_AppR    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+                   App e e₀ ⟶ App e e₁
+      Ctx_Lamb    : {e₀ e₁ : Expr} {x : V} -> e₀ ⟶ e₁ ->
+                    Lamb x e₀ ⟶ Lamb x e₁
       
-
 
     data _⟶*_ : Expr -> Expr -> Set where
       Reflex  : {e₀ e₁ : Expr} ->
@@ -93,3 +92,14 @@ module Reduction where
                 e₀ ⟶ e₁ ->
                 e₀ ⟶* e₁
       
+    ex1 : {y : V} -> (Var y) ⟶* (Var y)
+    ex1 = Reflex (var)
+
+{-
+    ex2 : {x y z : V} -> (App (Lamb x (Var y)) (Lamb z (Var z))) ⟶* Var y
+    ex2 = CBase {!β-reduction!}
+-}
+
+    ex2 : {x y z : V} -> (App (Lamb x (Var y)) (Lamb z (Var z))) ⟶ Var y
+    ex2 = {!β-reduction !}
+
