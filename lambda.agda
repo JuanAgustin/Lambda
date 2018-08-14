@@ -55,3 +55,12 @@ data _FreeV_ : V -> Expr -> Set where
   abs  : {x y : V} {e : Expr} -> x FreeV e -> (x ≡ y -> ⊥) ->
          x FreeV (Lamb y e)
 
+data _NotFreeV_ : V -> Expr -> Set where
+  var : {x y : V} -> (x ≡ y -> ⊥) ->
+           x NotFreeV (Var y)
+  appl : {x : V} {e e' : Expr} -> x NotFreeV e -> x NotFreeV e' ->
+           x NotFreeV (App e e')
+  absB : {x : V} {e : Expr} ->
+            x NotFreeV (Lamb x e)
+  absI : {x y : V} {e : Expr} -> x NotFreeV e ->
+            x NotFreeV (Lamb y e)

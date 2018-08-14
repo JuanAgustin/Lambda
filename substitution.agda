@@ -72,11 +72,11 @@ module Reduction where
                     e₀ ⟶ e₁ ->
                     e₁ ∼ e₁' ->
                     e₀ ⟶ e₁'
-      Ctx_AppL    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+      CtxAppL    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
                    App e₀ e ⟶ App e₁ e
-      Ctx_AppR    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
+      CtxAppR    : {e₀ e₁ e : Expr} -> e₀ ⟶ e₁ ->
                    App e e₀ ⟶ App e e₁
-      Ctx_Lamb    : {e₀ e₁ : Expr} {x : V} -> e₀ ⟶ e₁ ->
+      CtxLamb    : {e₀ e₁ : Expr} {x : V} -> e₀ ⟶ e₁ ->
                     Lamb x e₀ ⟶ Lamb x e₁
       
 
@@ -91,15 +91,74 @@ module Reduction where
       CBase   : {e₀ e₁ : Expr} ->
                 e₀ ⟶ e₁ ->
                 e₀ ⟶* e₁
+
+    data _⇉_ : Expr -> Expr -> Set where
+      Var     : {x : V} ->
+                Var x ⇉ Var x
+      Appl    : {M M' N N' : Expr} ->
+                M ⇉ M' -> N ⇉ N' ->
+               App M N ⇉ App M' N'
+      --Lamb    : {M M' : Expr} {x : V} ->
+      --          M ⇉ M' ->
+      --          Lamb x M ⇉ Lamb x M'
+      --AppLamb : {M M' N N' : Expr} {x : V} ->
+      --          M ⇉ M' -> N ⇉ N' ->
+      --          App (Lamb x M) N ⇉ (M' / (idd + (x , N')))
+      --Equiv   : {M M' M'' : Expr} ->
+      --         M ⇉ M' -> M' ∼ M'' ->
+      --        M ⇉ M''
+
+    data _⇉₀_ : Expr -> Expr -> Set where
+      Var     : {x : V} ->
+                Var x ⇉₀ Var x
+      Appl    : {M M' N N' : Expr} ->
+                M ⇉₀ M' -> N ⇉₀ N' ->
+                App M N ⇉₀ App M' N'
+      Lamb    : {M M' : Expr} {x : V} ->
+                M ⇉₀ M' ->
+                Lamb x M ⇉₀ Lamb x M'
+      AppLamb : {M M' N N' : Expr} {x : V} ->
+                M ⇉₀ M' -> N ⇉₀ N' ->
+                App (Lamb x M) N ⇉₀ (M' / (idd + (x , N')))
+
+
+    --lemma9 : {e e' : Expr} {x : V} -> e ⟶* e' -> x FreeV e' -> x FreeV e
+    --lemma9 = {!!}
+
+    open import Relation.Binary
+    open import Relation.Unary
+    open import Data.Product
+
+
+    --⇉⊆⟶* : {M N : Expr} -> M ⇉ N -> M ⟶* N
+    --⇉⊆⟶* Var = Reflex var
+   -- ⇉⊆⟶* (Appl M⇉M' N⇉N') = Transit (CBase (CtxAppL {!M⇉M'!})) {!!}
+    
+    --⇉⊆⟶* Appl  = ?
+    --⇉⊆⟶* Lamb = ?
+    --⇉⊆⟶* AppLamb = ?
+    --⇉⊆⟶* Equiv = ?
+
+    --lemma12 : {M N : Expr} -> M ⇉ N -> Σ[ P ∈ Expr ] ((M ⇉₀ P) × (P ∼ N))
+    --lemma12 = {!!}
+
+    --lemma11 : {M M' M'' : Expr} -> M ⇉ M' -> M ⇉ M'' -> Σ[ P ∈ Expr ] (( M' ⇉ P) × (M'' ⇉ P))
+    --lemma11 = {!!}
+
+
+{-
+    lemma12 : {M N P : Expr} -> M ⟶* N -> (M ⟶ N) ^ (P ∼ N)
+    lemma12 = ?
+-}
       
     ex1 : {y : V} -> (Var y) ⟶* (Var y)
     ex1 = Reflex (var)
 
 {-
-    ex2 : {x y z : V} -> (App (Lamb x (Var y)) (Lamb z (Var z))) ⟶* Var y
-    ex2 = CBase {!β-reduction!}
+    ex2 : (App (Lamb "x" (Var "y")) (Lamb "z" (Var "z"))) ⟶* Var "y"
+    ex2 = {!β-reduction!}
 -}
 
-    ex2 : {x y z : V} -> (App (Lamb x (Var y)) (Lamb z (Var z))) ⟶ Var y
-    ex2 = {!β-reduction !}
+    ex2 : (App (Lamb "x" (Var "y")) (Lamb "z" (Var "z"))) ⟶ (Var "y" / (idd + ("x" , (Lamb "z" (Var "z")))))
+    ex2 = β-reduction
 
