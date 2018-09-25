@@ -8,6 +8,8 @@ open import Data.Product
 open import Data.Bool
 open import Relation.Binary.Core
 open import Data.Empty
+open import Relation.Binary.PropositionalEquality
+
 
 module Subst (fresh : V -> List V -> V) where
 
@@ -56,6 +58,11 @@ module Reduction where
             (e / (idd + (x , Var y))) ∼ (e' / (idd + (x' , Var y))) ->
             (Lamb x e) ∼ (Lamb x' e')
 
+    reflex∼ : ∀ (M : Expr) -> M ∼ M 
+    reflex∼ (Var x) = var
+    reflex∼ (App e e₁) = app (reflex∼ e) (reflex∼ e₁)
+    reflex∼ (Lamb x e) = {!!}
+
 {-
       lam : {e e' : Expr} {x x' y : V}  ->
            y ∈ (x :: FreeV e) ≡ false -> y ∈ (x' :: FreeV e') ≡ false ->
@@ -66,7 +73,7 @@ module Reduction where
 {-⊥   bot ℙt -}
 
     data _⟶_ : Expr -> Expr -> Set where
-      β-reduction : {e e' : Expr} {x : V} ->
+      β-reduction : (e e' : Expr) {x : V} ->
                    App (Lamb x e) e' ⟶ (e / (idd + (x , e')))
       Renaming    : {e₀ e₁ e₁' : Expr} ->
                     e₀ ⟶ e₁ ->
@@ -91,6 +98,30 @@ module Reduction where
       CBase   : {e₀ e₁ : Expr} ->
                 e₀ ⟶ e₁ ->
                 e₀ ⟶* e₁
+
+    notFreeLam : ∀ {x M} → x FreeV (Lamb x M) → ⊥
+    notFreeLam (abs xfree absurd) = absurd refl
+
+
+
+    
+
+    Lam* : ∀ {M M' x} -> (M ⟶* M') -> Lamb x M ⟶* Lamb x M'
+    Lam* {M} {M'} {x} (Reflex p) = Reflex (lam notFreeLam notFreeLam {!!})
+    Lam* {M} {M'} {x} (Transit p₁ p₂) = Transit (Lam* p₁) (Lam* p₂)
+    Lam* {M} {M'} {x} (CBase p) = CBase (CtxLamb p)
+
+    appR* : ∀ {M N' N} -> (N ⟶* N') -> App M N ⟶* App M N'
+    appR* {M} {M'} {N} (Reflex p) = Reflex (app (reflex∼ M) p)
+    appR* {M} {M'} {N} (Transit p₁ p₂) = Transit (appR* p₁) (appR* p₂)
+    appR* {M} {M'} {N} (CBase p) = CBase (CtxAppR p)
+
+
+    appL* : ∀ {M M' N} -> (M ⟶* M') -> App M N ⟶* App M' N
+    appL* {M} {M'} {N} (Reflex p) = Reflex (app p (reflex∼ N))
+    appL* {M} {M'} {N} (Transit p₁ p₂) = Transit (appL* p₁) (appL* p₂)
+    appL* {M} {M'} {N} (CBase M⟶M') = CBase (CtxAppL M⟶M')
+
 
     data _⇉_ : Expr -> Expr -> Set where
       Var     : {x : V} ->
@@ -129,17 +160,26 @@ module Reduction where
     open import Relation.Unary
     open import Data.Product
 
-    EquivProp : (M : Expr) → M ∼ M
-    EquivProp M = {!!}
+    lemmaIdSubst : ∀ M x →  M ≡ M / (idd + (x , Var x))
+    lemmaIdSubst (Var x) x₁ = {!!}
+    lemmaIdSubst (App M₁ M₂) x = {!!}
+    lemmaIdSubst (Lamb x M) x₁ = {!!}
 
+    lemmaManu : ∀ {M M' x} -> M ∼ M' -> (Lamb x M) ∼ (Lamb x M')
+    lemmaManu {M} {M'} {x} eq = lam {M} {M'} {x} {x} {x}
+                           notFreeLam notFreeLam (subst₂ (λ e g → e ∼ g)
+                                                 (lemmaIdSubst M x) (lemmaIdSubst M' x) eq)
 
     lemmaAbs⟶* :  ∀ {M M' x} → M ⟶* M' → Lamb x M ⟶* Lamb x M'
-    lemmaAbs⟶* (Reflex p) = CBase (CtxLamb {!!})
+    lemmaAbs⟶* (Reflex p) = Reflex (lemmaManu p)
     lemmaAbs⟶* (Transit p p₁) = Transit (lemmaAbs⟶* p) (lemmaAbs⟶* p₁)
     lemmaAbs⟶* (CBase x₁) = CBase (CtxLamb x₁)
 
     lemmaApp⟶* : ∀ {M M' N N'} → M ⟶* M' → N ⟶* N' → App M N ⟶* App M' N'
-    lemmaApp⟶* p₁ p₂ = {!!}
+    lemmaApp⟶* p₁ p₂ = Transit (appL* p₁) (appR* p₂)
+
+    lemmaAppLamb⟶* : ∀ {M M' N N' x} → M ⟶* M' → N ⟶* N' → App (Lamb x M) N ⟶* (M' / (idd + (x , N')))
+    lemmaAppLamb⟶* {M} {M'} {N} {N'} {x} p₁ p₂ = Transit (Transit (appL* (Lam* p₁)) (appR* p₂)) (CBase (β-reduction M' N'))
 
 {- INTENTE CON ESTO, PERO A MEDIDA QUE FUI AVANZANDO PENSE QUE NO ERA EL CAMINO
     lemmaAppLamb⟶* : ∀ {M M' N N' x} → M ⟶* M' → N ⟶* N' → App (Lamb x M) N ⟶* (M' / (idd + (x , N')))
@@ -157,5 +197,5 @@ module Reduction where
     ⇉⊆⟶* Var = Reflex var
     ⇉⊆⟶* (Appl {M} {M'} {N} {N'} M⇉M' N⇉N') = lemmaApp⟶* (⇉⊆⟶* M⇉M') (⇉⊆⟶* N⇉N')
     ⇉⊆⟶* (Lamb {M} {M'} {x} M⇉M') = lemmaAbs⟶* (⇉⊆⟶* M⇉M')
-    ⇉⊆⟶* (AppLamb {M} {M'} {N} {N'} {x} M⇉M' N⇉N') = {!!}
+    ⇉⊆⟶* (AppLamb {M} {M'} {N} {N'} {x} M⇉M' N⇉N') = lemmaAppLamb⟶* (⇉⊆⟶* M⇉M') (⇉⊆⟶* N⇉N')
     ⇉⊆⟶* (Equiv {M} {M'} {M''} M⇉M' M'∼M'') = Transit (⇉⊆⟶* M⇉M') (Reflex M'∼M'')
