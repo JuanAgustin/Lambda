@@ -1,0 +1,80 @@
+	La sintaxis abstracta del cálculo Lambda está dada por la siguiente gramática abstracta
+
+<expr> ::= <var> | <expr> <expr> | \lambda <var> . <expr>
+
+Donde la primera producción <var> representa a un conjunto prefedinido infinitamente de variables. Las expresiones de la forma <expr1> <expr2> son llamadas aplicaciones donde expr1 es llamado operador y expr2 el operando, y finalmente las expresiones \lambda <var> . <expr> son abstracciones o expresiones lambda.
+	Asumimos que la aplicacion es asociativa a la izquierda y que, en \lambda v.e, la subexpresion e se extiende hasta el primer parentesis o hasta el final de la expresion.
+
+Esta gramatica puede ser facilmente definida en Agda de la siguiente manera
+
+ data Expr : Set where
+  Var   : V -> Expr
+  App   : Expr -> Expr -> Expr
+  Lamb  : V -> Expr -> Expr
+
+
+	El conjuto FV(e) de variables libres ocurridas en e está definido por
+
+ FV(v) = {v}
+ FV(e0 e1) = FV(e0) U FV(e1)
+ FV(\lambda v . e) = FV(e) - {v}
+
+en Agda, para representar las variables libres cree una nueva estructura de datos
+ V FreeV Expr
+donde si el elemento 'x FreeV e1' existe, significa que x pertenece a FV(e1).
+
+ data _FreeV_ : V -> Expr -> Set where
+   var : {x y : V} -> x ≡ y ->
+          x FreeV (Var x)
+   appl : {x : V} {e e' : Expr} -> x FreeV e ->
+          x FreeV (App e e')
+   appr : {x : V} {e e' : Expr} -> x FreeV e' ->
+          x FreeV (App e e')
+   abs  : {x y : V} {e : Expr} -> x FreeV e -> (x ≡ y -> ⊥) ->
+          x FreeV (Lamb y e)
+
+	También podemos definir la substitución el Lambda. El resultado e/δ de la substitucion simultanea δv para cada ocurrencia de cada variable v en e es definido por
+
+  v/δ = δv
+  (e(0)e(1))/δ = (e(0)/δ)(e(1)/δ)
+  (\lambda v . e)/δ = \lambda v(new) . (e/[δ | v : v(new)],
+
+donde
+
+  v(new) no pertenece a U FV(δw) con w perteneciente a FV(e)-{v}
+
+
+En Agda definimos la funcion que a una variable le asigna una expresion
+
+ Δ = V -> Expr
+
+para poder definir la funcion substitucion, antes debemos definir la identidad de Δ, la funcion que agrega asignaciones y la funcion que da las variables libres de una asignacion
+
+ idd : Δ
+ idd x = Var x
+
+ _+_ : Δ -> (V × Expr) -> Δ
+ (δ + ( x , M )) y with x == y
+ ... | true = M
+ ... | false = δ y
+    
+ FreeVSubs : Δ -> List V -> List V
+ FreeVSubs δ [] = []
+ FreeVSubs δ (x :: xs) = FreeVList (δ x) +++ FreeVSubs δ xs 
+
+y asi obtenemos
+
+ _/_ : Expr -> Δ -> Expr
+ Var v / δ = δ v
+ (App e e') / δ = App (e / δ) (e' / δ)
+ (Lamb x e) / δ = Lamb y (e / (δ + (x , Var y)))
+   where y = fresh x (FreeVSubs δ (FreeVList e - x))
+
+donde 
+
+ fresh : V -> List V -> V
+
+
+ La operacion de reempla
+
+
