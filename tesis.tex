@@ -5,16 +5,29 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage[utf8]{inputenc}
+\usepackage{listings}
 \newcommand{\expr}{\langle \mathsf{exp} \rangle}
-\title{Tesis}
-\author{agustin}
+\newcommand{\var}{\langle \mathsf{var} \rangle} 
+\newtheorem{definition}{Definición}
+\newtheorem{theorem}{Teorema}
+
+
+
 \begin{document}
+
+\title{Formalización del teorema de Church-Rosser}
+\author{Juan Agustín Bongiovanni}
+
 
 \maketitle
 
+\tableofcontents
 
 \input{intro}
 \input{lambda}
-
+\input{agda}
+\input{syntax}
+\input{church}
+\input{conclusions}
 
 \end{document}

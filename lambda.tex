@@ -1,16 +1,3 @@
-\documentclass{book}
-
-\usepackage[spanish]{babel}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage[utf8]{inputenc}
-\usepackage{listings}
-\newcommand{\expr}{\langle \mathsf{exp} \rangle}
-\newcommand{\var}{\langle \mathsf{var} \rangle}
-\newtheorem{definition}{Definición}
-\newtheorem{theorem}{Teorema}
-\begin{document}
 \chapter{Cálculo Lambda}
 \label{chap:lambda}
 
@@ -34,82 +21,84 @@ En Agda, podes definir la sintaxis del cálculo de la siguiente manera: \\
   App       : Expr -> Expr -> Expr
   Lamb      : V -> Expr -> Expr
 \end{lstlisting}
-                             
-La aplicación es asociativa a la izquierda y en lambda v.e, la subexpresion e se extiende hasta el primer simbolo de paro (como por ejemplo un paréntesis) o hasta el final de la frase. Se dice que la ocurrencia de 'v' tiene como alcance a 'e'.
-
-El conjunto de la variables libres que ocurren una expresión lambda e es definida por: \\
 
 
-\begin{definition}[Variables Libres]
-  \begin{align*}\label{eq:1}
-    FV(v) &= {v} \\
-    FV(e_{0}e_{1}) &= FV(e_{0}) \cup FV(e_{1}) \\
-    FV(\lambda v.e) &= FV(e) - {v} \\
-  \end{align*}
-\end{definition}
 
-\\
+% La aplicación es asociativa a la izquierda y en lambda v.e, la subexpresion e se extiende hasta el primer simbolo de paro (como por ejemplo un paréntesis) o hasta el final de la frase. Se dice que la ocurrencia de 'v' tiene como alcance a 'e'.
 
-En Agda a las variables libres las podemos expresar de dos formas, una de ellas es como una funcion la cual toma como argumento a una expresión lambda y devuelve una lista de sus variables libres. Para esto defino la estructura de datos de una lista con sus respectivas funciones que voy a necesitar: \\
+% El conjunto de la variables libres que ocurren una expresión lambda e es definida por: \\
 
-\begin{lstlisting}
-  data List (A : Set) : Set where
-  [ ]                 : List A
-  _::_                : A -> List A -> List A
-\end{lstlisting}
+
+% \begin{definition}[Variables Libres]
+%   \begin{align*}\label{eq:1}
+%     FV(v) &= {v} \\
+%     FV(e_{0}e_{1}) &= FV(e_{0}) \cup FV(e_{1}) \\
+%     FV(\lambda v.e) &= FV(e) - {v} \\
+%   \end{align*}
+% \end{definition}
+
+% \\
+
+% En Agda a las variables libres las podemos expresar de dos formas, una de ellas es como una funcion la cual toma como argumento a una expresión lambda y devuelve una lista de sus variables libres. Para esto defino la estructura de datos de una lista con sus respectivas funciones que voy a necesitar: \\
+
+% \begin{lstlisting}
+%   data List (A : Set) : Set where
+%   [ ]                 : List A
+%   _::_                : A -> List A -> List A
+% \end{lstlisting}
  
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  _ (*$\in$*) _ : V -> List V -> Bool
-  x (*$\in$*) [] = false
-  x (*$\in$*) (y::ys) with x==y
-  ... | true  = true
-  ... | false = x \in ys
-\end{lstlisting}
-\\
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  _ +++ _ : List V -> List V -> List V
-  ys        +++ [ ] = ys
-  (x :: xs) +++ (y :: ys) with x == y
-  ... | true = x :: (xs +++ ys)
-  ... | false = x :: (y :: ( xs +++ ys))
-\end{lstlisting}
-\\
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  _ - _ : List V -> V -> List V
-  (x :: xs) - s with x == s
-  ... | true = xs - s
-  ... | false = x :: (xs - s)
-\end{lstlisting}
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   _ (*$\in$*) _ : V -> List V -> Bool
+%   x (*$\in$*) [] = false
+%   x (*$\in$*) (y::ys) with x==y
+%   ... | true  = true
+%   ... | false = x \in ys
+% \end{lstlisting}
+% \\
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   _ +++ _ : List V -> List V -> List V
+%   ys        +++ [ ] = ys
+%   (x :: xs) +++ (y :: ys) with x == y
+%   ... | true = x :: (xs +++ ys)
+%   ... | false = x :: (y :: ( xs +++ ys))
+% \end{lstlisting}
+% \\
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   _ - _ : List V -> V -> List V
+%   (x :: xs) - s with x == s
+%   ... | true = xs - s
+%   ... | false = x :: (xs - s)
+% \end{lstlisting}
 
-Y por ultimo defino la funcion que me devuelve las variables libres de una expresión: \\
+% Y por ultimo defino la funcion que me devuelve las variables libres de una expresión: \\
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  FreeVList : Expr -> List V
-  FreeVList (Var s) = s :: [ ]
-  FreeVList (App e(*$_{1} e_{2}$*)) = FreeVList (*e$_{1}$*) +++ FreeVList (*e$_{2}$*)
-  FreeVList (Lamb s (*e$_{1}$*)) = FreeVList (*e$_{1}$*) - s
-\end{lstlisting}
-\\ \\
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   FreeVList : Expr -> List V
+%   FreeVList (Var s) = s :: [ ]
+%   FreeVList (App e(*$_{1} e_{2}$*)) = FreeVList (*e$_{1}$*) +++ FreeVList (*e$_{2}$*)
+%   FreeVList (Lamb s (*e$_{1}$*)) = FreeVList (*e$_{1}$*) - s
+% \end{lstlisting}
+% \\ \\
 
-Otra forma de ver las variables libres es definiendo una relación de dos elementos, donde uno de ellos es una variable y el otro será una expresion lambda. Esta relación sólo estará definida si esa variable es una variable libre de dicha expresión.
-Para esto debo escribir todos los casos posibles para la expresiones lambda, con todos sus constructores. La relacion quedaría de la siguiente forma: \\
+% Otra forma de ver las variables libres es definiendo una relación de dos elementos, donde uno de ellos es una variable y el otro será una expresion lambda. Esta relación sólo estará definida si esa variable es una variable libre de dicha expresión.
+% Para esto debo escribir todos los casos posibles para la expresiones lambda, con todos sus constructores. La relacion quedaría de la siguiente forma: \\
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
-data _ FreeV _ : V -> Expr -> Set where
-var : {x y : V} -> x = y ->
-         x FreeV (Var y)
-appl : {x : V} {e e' : Expr} -> x FreeV e ->
-         x FreeV (App e e')
-appr : {x : V} {e e' : Expr} -> x FreeV e' ->
-         x FreeV (App e e')
-abs  : {x y : V} {e : Expr} -> x FreeV e -> (x = y -> (*$\bot$*)) ->
-         x FreeV (Lamb y e)
-\end{lstlisting}
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+% data _ FreeV _ : V -> Expr -> Set where
+% var : {x y : V} -> x = y ->
+%          x FreeV (Var y)
+% appl : {x : V} {e e' : Expr} -> x FreeV e ->
+%          x FreeV (App e e')
+% appr : {x : V} {e e' : Expr} -> x FreeV e' ->
+%          x FreeV (App e e')
+% abs  : {x y : V} {e : Expr} -> x FreeV e -> (x = y -> (*$\bot$*)) ->
+%          x FreeV (Lamb y e)
+% \end{lstlisting}
       
 
-Lo siguiente sería realizar dos pruebas con ambas definiciones. Una de completitud que demuestre que si existe v FreeV e entonces v pertenece a la lista de variables libres de e. Y luego una prueba de correccion, la cual muestra que para toda variable v perteneciente a lista de variables libres de e, existe la relacion v FreeV e.
-Las demostraciones también las puedo realizar en Agda:
+% Lo siguiente sería realizar dos pruebas con ambas definiciones. Una de completitud que demuestre que si existe v FreeV e entonces v pertenece a la lista de variables libres de e. Y luego una prueba de correccion, la cual muestra que para toda variable v perteneciente a lista de variables libres de e, existe la relacion v FreeV e.
+% Las demostraciones también las puedo realizar en Agda:
 
 
 
@@ -119,69 +108,68 @@ Las demostraciones también las puedo realizar en Agda:
 
                              
 
---------------------------------
+% --------------------------------
                              
 
 
 
 
 
-Tambien podemos definir e / $\delta$, que es la sustitucion de $\delta$ por cada aparicion de v, de la siguiente manera:
+% Tambien podemos definir e / $\delta$, que es la sustitucion de $\delta$ por cada aparicion de v, de la siguiente manera:
 
-\begin{definition}[Sustitucion]
-  \begin{align*}\label{eq:1}
-    v / \delta &= \delta v \\
-    (e_{0}e_{1})/\delta &= (e_{0}/\delta)(e_{1}/\delta) \\
-    (\lambda v.e)/\delta &= \lambda v_{new}.(e/[\delta\dimv:v_{new}]), where  v_{new} \notin Union 
-  \end{align*}
-\end{definition}
+% \begin{definition}[Sustitucion]
+%   \begin{align*}\label{eq:1}
+%     v / \delta &= \delta v \\
+%     (e_{0}e_{1})/\delta &= (e_{0}/\delta)(e_{1}/\delta) \\
+%     (\lambda v.e)/\delta &= \lambda v_{new}.(e/[\delta\dimv:v_{new}]), where  v_{new} \notin Union 
+%   \end{align*}
+% \end{definition}
 
-En Agda debo definir la funcion $\Delta$ que toma como argumento una variable y retonar una expresion lambda.
-\\
-$\Delta$=V -$>$ Expr
-\\
+% En Agda debo definir la funcion $\Delta$ que toma como argumento una variable y retonar una expresion lambda.
+% \\
+% $\Delta$=V -$>$ Expr
+% \\
 
-Luego la substitucion queda de la siguiente manera:\\
+% Luego la substitucion queda de la siguiente manera:\\
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
- _/ _ : Expr -> (*$\delta$*) -> Expr
-Var v / (*$\delta$*)    = (*$\delta$*) v
-(App e e')/(*$\delta$*) = App (e/(*$\delta$*)(e'/(*$\delta$*)
-(Lamb x e)/(*$\delta$*) = Lamb y (e/((*$\delta$*)+(x,Var y)))
-                         where y = fresh x (FreeVSubs (*$\delta$*) (FreeVList e-x))
-\end{lstlisting}
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%  _/ _ : Expr -> (*$\delta$*) -> Expr
+% Var v / (*$\delta$*)    = (*$\delta$*) v
+% (App e e')/(*$\delta$*) = App (e/(*$\delta$*)(e'/(*$\delta$*)
+% (Lamb x e)/(*$\delta$*) = Lamb y (e/((*$\delta$*)+(x,Var y)))
+%                          where y = fresh x (FreeVSubs (*$\delta$*) (FreeVList e-x))
+% \end{lstlisting}
  
-\begin{proposition}[Proposicion]
-  Supongamos que e es una expresión del cálculo lambda, entonces:\\
-  (a) Si \delta w = \delta 'w para todo w \in FV(e), entonces e/\delta = e/\delta\\
-  (b) e/I_{<var>}=e\\
-  (c) FV(e/\delta) = Union FV(\delta w) \\
-\end{proposition}
+% \begin{proposition}[Proposicion]
+%   Supongamos que e es una expresión del cálculo lambda, entonces:\\
+%   (a) Si \delta w = \delta 'w para todo w \in FV(e), entonces e/\delta = e/\delta\\
+%   (b) e/I_{<var>}=e\\
+%   (c) FV(e/\delta) = Union FV(\delta w) \\
+% \end{proposition}
 
 
 
- Renombre o cambio de variable alcanzada:\\
- La operacion de reemplazar la ocurrencia de una expresion lambda $\delta$v.e por $\delta$v$_{new}$.(e/v -$>$ v$_{new}$), donde v$_{new}$ es cualquier variable que no pertenece al conjunto FV(e) - {v}. es llamado renombre o cambio de variable alcanzada.
- Si e' es obtenida a partir de e luego del renombre de cero o mas ocurrencias de subfrases, decimos que que e' es obtenida de e por renombre, o que e es $\alpha$-convertida a e'. Como podremos demostrar luego que es una relacion de equivalencia podemos decir que e y e' son $\alpha$-equivalentes.\\
- En Agda podemos definir la relacion congruencia y la prueba de que es una relación de equivalencia de la siguiente forma:\\ \\
+%  Renombre o cambio de variable alcanzada:\\
+%  La operacion de reemplazar la ocurrencia de una expresion lambda $\delta$v.e por $\delta$v$_{new}$.(e/v -$>$ v$_{new}$), donde v$_{new}$ es cualquier variable que no pertenece al conjunto FV(e) - {v}. es llamado renombre o cambio de variable alcanzada.
+%  Si e' es obtenida a partir de e luego del renombre de cero o mas ocurrencias de subfrases, decimos que que e' es obtenida de e por renombre, o que e es $\alpha$-convertida a e'. Como podremos demostrar luego que es una relacion de equivalencia podemos decir que e y e' son $\alpha$-equivalentes.\\
+%  En Agda podemos definir la relacion congruencia y la prueba de que es una relación de equivalencia de la siguiente forma:\\ \\
  
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  data _(*$\neg$*)_ : Expr -> Expr -> Set where
-  var : {x : V} ->
-    (Var x) (*$\neg$*) (Var x)
-  app : {e e' g g' : Expr} -> e (*$\neg$+) e' -> g (*$\neg$*) g' ->
-    (App e g) (*$\neg$*) (App e' g')
-  lam : {e e' : Expr} {x x' y : V} ->
-    (y FreeV (Lamb x e) -> (*$\bot$*)) -> (y FreeV (Lamb x' e') -> (*$\bot$*)) ->
-    (e / (idd + (x , Var y))) (*$\neg$*) (e' / (idd + (x' , Var y))) ->
-    (Lamb x e) (*$\neg$*) (Lamb x' e')
-\end{lstlisting} \\
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   data _(*$\neg$*)_ : Expr -> Expr -> Set where
+%   var : {x : V} ->
+%     (Var x) (*$\neg$*) (Var x)
+%   app : {e e' g g' : Expr} -> e (*$\neg$+) e' -> g (*$\neg$*) g' ->
+%     (App e g) (*$\neg$*) (App e' g')
+%   lam : {e e' : Expr} {x x' y : V} ->
+%     (y FreeV (Lamb x e) -> (*$\bot$*)) -> (y FreeV (Lamb x' e') -> (*$\bot$*)) ->
+%     (e / (idd + (x , Var y))) (*$\neg$*) (e' / (idd + (x' , Var y))) ->
+%     (Lamb x e) (*$\neg$*) (Lamb x' e')
+% \end{lstlisting} \\
 
-\begin{lstlisting}[escapeinside={(*}{*)}]
-  reflex(*$\neg$*) : (*$\forall$*) (M : Expr) -> M (*$\neg$*) M
-  reflex(*$\neg$*) (Var x) = var
-  reflex(*$\neg$*) (App e e(*$_{1}$*)) = app (reflex(*$\neg$*) e) (reflex(*$\neg$*) e(*$_{1}$*))
-  reflex(*$\neg$*) (Lamb x e) =
-\end{lstlisting}
+% \begin{lstlisting}[escapeinside={(*}{*)}]
+%   reflex(*$\neg$*) : (*$\forall$*) (M : Expr) -> M (*$\neg$*) M
+%   reflex(*$\neg$*) (Var x) = var
+%   reflex(*$\neg$*) (App e e(*$_{1}$*)) = app (reflex(*$\neg$*) e) (reflex(*$\neg$*) e(*$_{1}$*))
+%   reflex(*$\neg$*) (Lamb x e) =
+% \end{lstlisting}
  
-\end{document}
