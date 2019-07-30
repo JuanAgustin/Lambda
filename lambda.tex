@@ -1,26 +1,157 @@
 \chapter{Cálculo Lambda}
 \label{chap:lambda}
 
-El cálculo lambda es un lenguaje de programacion funcional, el cual subyace y facilita muchos otros lenguajes en general.
+%El cálculo lambda es un lenguaje de programacion funcional, el cual subyace y facilita muchos otros lenguajes en general.
 
-\title{Sintaxis}
-\maketitle
+\section{Historia}
 
-El cálculo lamba tiene la siguiente sintaxis abtracta \\
+Gottfried Wilhelm Leibniz tenía como ideal conseguir lo siguiente:\\
+1) Crear un lenguaje universal en el que todos los problemas posiblen puedan estar.\\
+2) Encontra un método con el que se pueda resolver todos los problemas establecidos en el lenguaje universal.\\
+El problema 1 se puede cumplir adoptando alguna forma de teoría de conjuntos en el lenguaje de la lógica predicada de primer orden. El punto 2 trae una difícil pregunta: ¿se puede resolver todos los problemas formulados en el lenguaje universal? Esto se puede ver que no, pero no es muy claro probar eso. Esta pregunta se conoce como el Entscheidungsproblem.
+En 1936 con el objetivo de resolver el Entscheidungsproblem, Alonzo Church y Alan Turing adoptaron una formalización de la noción 'computable'. Church y Turing presentaron dos modelos de computación diferntes:\\
+1) Church (1936) inventó un sistema formal llamado Cálculo Lambda y definió la idea de computabilidad a través de este sistema.\\
+2) Turing (1936/2937) inventó una clase de máquinas (luego llamadas las máquinas de turing) y definió la idea de computabilidad basada en estas máquinas.\\
+El cálculo lambda es un lenguaje universal ya que cualquier función computable puede ser expresada y evaluada a través de él, este lenguaje es capaz de decidir que función puede ser computable o no. Este tipo de demostraciones son equivalentes a las máquinas de Turing, con la diferencia de que el cálculo lambda no hace demasiado uso de reglas de transformación (usa sustituciones de variables) y no está pensado para que pueda ser implementado en maquinas reales.\\
+Considerado el primer lenguaje funcional, este lenguaje es el fundamento de los lenguajes funcionales. El cálculo lambda se puede considerar como el lenguaje de programación más pequeño, ya que consiste en una regla de sustitución de variables, además de un esquema simple de definición de funciones.\\
+El primer lenguaje funcional en aparecer fue LISP, diseñado en 1958 por John McCarthy en el entorno de la computación simbólica. A este lenguaje siguieron otros como ML, el Miranda y el Haskell.
 
-\[
-\expr ::= \var\,\mid\, \expr \expr \,\mid\, \lambda \var.\expr
-\]
+\section{Introducción}
 
-donde \( \var \) es un conjunto predefinido de variables infinito. La expresion de la forma <exp> <exp> es llamada aplicacion, dentro de esta expresion tomando como ejemplo e$_{0}$e$_{1}$, e0 es llamado operador e1 el operando. La ultima forma lambda <var>.<exp> es llamada abstracion o expresion lambda.
-En Agda, podes definir la sintaxis del cálculo de la siguiente manera: \\
+Un programa funcional consiste en una expresion E la cual esta sujeta a reglas de reescritura. La reduccion se basa en reemplazar una parte P de E por otra expresión P' de acuerdo a reglas de reescritura dadas. La notacion seria la siguiente
+\[ E[P] \rightarrow E[P'] \]
+Este proceso de reducción se debe repetir hasta obtener una expresion la cual no tenga mas partes que puedan ser reemplazadas. A esta ultima se la llama forma normal E* de la expresion E, y es el dato de salida del programa funcional.
+Se puede dar un ejemplo, en el cual las reglas de reduccion consiste en las operaciones sobre numeros:
 
 \begin{lstlisting}
-  data Expr : Set where
-  Var       : V
-  App       : Expr -> Expr -> Expr
-  Lamb      : V -> Expr -> Expr
+   (20-5)+(11+8*2) -> 15+(11+8*2)
+                   -> 15+(11+16)
+                   -> 15+27
+                   -> 42
 \end{lstlisting}
+%¡CAMBIAR LAS FLECHAS!
+El sistema de reduccion usualmente satisface la propiedad Church-Rossier que establece que la forma normal obtenida es independiente del orden en el que se evaluen los subterminos. Tomando el mismo ejemplo, lo podemos ver:
+\begin{lstlisting}
+   (20-5)+(11+8*2) -> (20-5)+(11+16)
+                   -> (20-5)+27
+                   -> 15+27
+                   -> 42
+\end{lstlisting}
+
+o evaluando varias sub-expresiones al mismo tiempo:
+
+\begin{lstlisting}
+   (20-5)+(11+8*2) -> 15+(11+16)
+                   -> 15+27
+                   -> 42
+ \end{lstlisting}
+
+ Tenemos dos operaciones básicas en el cálculo lambda: la aplicación y la abstracción.
+ La primera de ellas se denota a través de la expresion F.A o FA, donde la F es considerada un algoritmo al cual se le aplica como entrada el dato A. Es de tipo libre, esto permite considerar expresión como por ejemplo FF, donde F es aplicada a si misma. Esto es útil para simular la recursión.
+ La otra operación basica es la abstracción. Si M $\equiv$ M[x] es una expresión que contiene a $x$, entonces $\lambda$$x$.M[$x$] denota la función $x$ $\mapsto$ M[$x$].
+ Estas dos operaciones trabajan juntas. Esto lo podemos ver en la siguiente fórmula:
+ \[ (\lambda x.2*x+1)3=2*3+1 (=7) \]
+
+ \section{Definición formal}
+
+ La sintaxis oficial del calculo lambda esta contenida en la siguiente definición:
+
+ \begin{definition}[]
+   El alfabeto del cálculo lambda contiene los parentesis y corchetes izquiedros y derechos, el simbolo $\lambda$ y un conjunto infinito de variables. Los términos de tipo lambda se definen inductivamente de la siguiente manera:\\
+   1. Toda variable es un $\lambda$-términos\\
+   2.Si M y N son $\lambda$-términos, entonces (MN) lo es también\\
+   3.Si M es un $\lambda$-término y x es una variable, entonces ($\lambda$$x$[M]) es un $\lambda$-término\\
+\end{definition}
+
+Los términos formados a partir de la regla (2) son llamados términos de aplicación, mientras que los formados a partir de la regla (3) son término de abstracción.
+Para poder omitir paréntesis y ahorrarse escribir paréntesis innecesarios se adopta la convensión de asociación a la izquierda, por ejemplo cuando se juntan mas de dos términos como M1M2M3...Mn se pueden recuperar los paréntesis faltantes asociando a la izquierda y quedaría ((M1M2)M3)...Mn
+
+Variable ligadas y libres
+
+Se puede definir la noción de variables libres y ligadas de la siguiente manera:
+
+\begin{definition}[]
+  Las funciones sintácticas FV and BV (variables libres y variables ligadas, respectivamente) son definididas en el conjunto de $\lambda$-términos de forma inductiva:\\
+  Para cualquier variable $x$ y términos M y N:\\
+  1. FV($x$)={$x$}\\
+  2. FV(MN)=FV(M)$\cup$FV(N)\\
+  3. FV($\lambda$$x$[M])=FV(M)-{$x$}\\
+  \\
+  1. BV($x$)={$/emptyset$}\\
+  2. BV(MN)=BV(M)$\cup$BV(N)\\
+  3. BV($\lambda$$x$[M])=BV(M)$\cup${$x$}\\
+\end{definition}
+
+A continuación, definimos sustitución:
+
+\begin{definition}[Sustitución]
+  Escribimos M[$x$:=N] para denotar la sustitución de N por las ocurrencias libres de $x$ en M. Una definición precisa por recursion en el conjunto de $\lambda$-términos es la siguiente: para todos términos A,B y M, y para todas variables $x$,$y$ tenemos:\\
+  1. $x$[$x$:=M]$\equiv$M\\
+  2. $y$[$x$:=M]$\equiv$$y$ ($y$ distinto a $x$)\\
+  3. (AB)[$x$:=M]$\equiv$A[$x$:=M]B[$x$:=M]\\
+  4. ($\lambda$$x$[A])[$x$:=M]$\equiv$$\lambda$$x$[A]\\
+  5. ($\lambda$$y$[A])[$x$:=M]$\equiv$[A[$x$:=M]] ($y$ distinto a $x$)\\
+\end{definition}
+
+La parte (1) dice que si queremos sustituit M por $x$ y estamos simplemente tenemos a $x$, entonces el resultado será M. La parte (2) dice que no pasa nada cuando queremos sustituir $x$ y estamos tratando con una variable distinta. La cláusula (3) dice que la sustitución se distribuye en la aplicación. Las cláusulas (4) y (5) se refieren a términos de abstracción y cláusulas paralelas (1) y (2): si la variable enlazada $z$ del término de abstracción $\lambda$$z$[A] es idéntico a la variable $x$ para la que debemos aplicar la sustitución entonces no realizamos ninguna sustitución. Esto es porque M[$x$:=N] denota la sustitución de N por las ocurrencias libres de $x$ en M. Si M es un término de abstracción $\lambda$$x$[A] cuya variable ligada es $x$, entonces $x$ no ocurre libremente en M, por lo que no hay nada para hacer. Esto explica la cláusula (4). En cambio, en la (5) si la variable ligada de un término de abstracción difiere de $x$, entonces al menos tiene la posibilidad de ocurrir libremente en el término de abstracción, y la sustitución continúa en el cuerpo de este término.
+
+\begin{definition}[Cambio de variable ligadas, $\alpha$-conversión]
+  El término N es obtenido del término M mediante el cambio de variable ligada si cualquier término de asbtracción $\lambda$$x$[A] dentro de M ha sido reemplazado por $\lambda$$y$[A[$x$:=$y$]]
+\end{definition}
+
+Decimos que dos términos M y N son $\alpha$-convertibles si hay una secuencia de cambios de variables ligadas empezando por M y que termina en N.
+
+
+Reducción
+
+Hay varias nociones de reducción que son válidas en el cálculo lambda, pero la principal es $/beta$-reducción
+
+\begin{definition}[Un paso de $\beta$-reducción]
+  Para $\lambda$-términos A y B, decimos que A se $\beta$-reduce en un paso a B, si existe un subtérmino C en A, una variable $x$ y $\lambda$-términos M y N tal que C$\equiv$($\lambda$[M])N y B es A a expeción de que una ocurrencia de C en A sea reemplazada por M[$x$:=N].
+\end{definition}
+
+Podemos ver varios ejemplos:
+
+1) ($\lambda$$x$[$x$])a ->$\beta$ a
+2) ($\lambda$$x$[$y$])a ->$\beta$ $y$
+3) ($\lambda$$y$[y5])($\lambda$$x$[3*$x$]) ->$\beta$ ($\lambda$$x$[3*x])5 ->$\beta$ 3*5
+4) El término ($\lambda$$x$[($\lambda$$y$[$x$$y$])a])b se puede reducir en un paso en dos diferentes $\lambda$-términos:
+($\lambda$$x$[($\lambda$$y$[$x$$y$])a])b ->$\beta$ ($\lambda$$y$[b$y$])a
+y
+($\lambda$$x$[($\lambda$$y$[$x$$y$])a])b] ->$\beta$ ($\lambda$$x$[$x$a])b
+
+Vemos que la reducción no es otra cosa que el reemplazo textual de un parámetro formal en el cuerpo de una función por el parámetro real dado. Si una secuencia de reducciones ha llegado a su fin y no es posible realizar mas reducciones, decimos que el término se ha reducido a su forma normal.
+Uno esperaría que un término después de una serie de reducciones llegue a una forma donde no sea posible aplicar más reducciones. Pero esto no siempre es posible. Se puede ver esto con este ejemplo:
+
+($\lambda$$x$[$x$$x$])($\lambda$$x$[$x$$x$])
+
+Este término siempre se reduce a si mismo. Este término, como muchos otros, no tiene una forma normal.
+
+\section{Teorema Church-Rosser}
+
+Es posible que un término ofrezca muchas oportunidades de reducción al mismo tiempo. Para que todo el cálculo tenga sentido, es necesario que el resultado de la computación sea independiente del orden de reducción. Es necesario expresar esta propiedad para todos los términos, no sólo para aquellos que tengan una formal normal. Esto es posible con el siguiente teorema:
+
+\begin{theorem}[Church-Rosser]
+Si un término M puede reducirse (en varios pasos) a términos N y P, entonces existe un término Q al que tanto como N y P pueden reducirse (en varios pasos).
+\end{theorem}
+
+Imagen rombo
+
+%El cálculo lamba tiene la siguiente sintaxis abtracta \\
+
+% \[
+% \expr ::= \var\,\mid\, \expr \expr \,\mid\, \lambda \var.\expr
+% \]
+
+%donde \( \var \) es un conjunto predefinido de variables infinito. La expresion de la forma <exp> <exp> es llamada aplicacion, dentro de esta expresion tomando como ejemplo e$_{0}$e$_{1}$, e0 es llamado operador e1 el operando. La ultima forma lambda <var>.<exp> es llamada abstracion o expresion lambda.
+%En Agda, podes definir la sintaxis del cálculo de la siguiente manera: \\
+
+% \begin{lstlisting}
+%   data Expr : Set where
+%   Var       : V
+%   App       : Expr -> Expr -> Expr
+%   Lamb      : V -> Expr -> Expr
+% \end{lstlisting}
 
 
 
