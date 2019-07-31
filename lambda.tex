@@ -65,10 +65,28 @@ o evaluando varias sub-expresiones al mismo tiempo:
 
 Los términos formados a partir de la regla (2) son llamados términos de aplicación, mientras que los formados a partir de la regla (3) son término de abstracción.
 Para poder omitir paréntesis y ahorrarse escribir paréntesis innecesarios se adopta la convensión de asociación a la izquierda, por ejemplo cuando se juntan mas de dos términos como M1M2M3...Mn se pueden recuperar los paréntesis faltantes asociando a la izquierda y quedaría ((M1M2)M3)...Mn
+\\
+Como ejemplo de expresiones lambda podemos ver como se codifican estructuras de datos conocidas:
+\begin{itemize}
+\item Números: Los números de Church son una representación de los números naturales. La función que representa al número natural n es una función que asigna cualquier función a su composición en n. Es decir, el valor del número es igual a la cantidad de veces que la función encapsula al argumento. Todos los números de Church son funciones de dos parámetros, empezando por el 0 al que no se le aplica ninguna función.
+  \begin{itemize}
+    \item 0 = $\lambda$f.$\lambda$$x$.$x$
+    \item 1 = $\lambda$f.$\lambda$$x$.f$x$
+    \item 2 = $\lambda$f.$\lambda$x.f(f$x$)
+    \item 3 = $\lambda$f.$\lambda$$x$.f(f(f$x$))
+  \end{itemize}
+\item Valores booleanos: Estos valores se pueden definir en lambda de la siguiente manera:
+  \begin{itemize}
+    \item true = $\lambda$$x$.$\lambda$$y$.$x$
+    \item false= $\lambda$$x$.$\lambda$$y$.$y$
+    \end{itemize}
+    Por ejemplo la sentencia IF se escribe de la siguiente forma: $\lambda$p.$\lambda$a.$\lambda$b.pab \\
+    Si p es True será ($\lambda$$x$.$\lambda$$y$.$x$)(ab) = a \\
+    Si p es True será ($\lambda$$x$.$\lambda$$y$.$y$)(ab) = b
+  \item Listas: Consisten en un par formado por la cabeza (head) de la lista y su cola (tail). A este par lo podemos representar de la siguiente manera: ($\lambda$f.((fh)t)
+\end{itemize}
 
-Variable ligadas y libres
-
-Se puede definir la noción de variables libres y ligadas de la siguiente manera:
+Las variables en las expresiones del cálculo lambda pueden ser tanto libres como ligadas. Se puede definir la noción de variables libres y ligadas de la siguiente manera:
 
 \begin{definition}[]
   Las funciones sintácticas FV and BV (variables libres y variables ligadas, respectivamente) son definididas en el conjunto de $\lambda$-términos de forma inductiva:\\
